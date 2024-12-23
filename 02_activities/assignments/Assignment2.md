@@ -44,17 +44,20 @@ Additionally, include a date table.
 There are several tools online you can use, I'd recommend [Draw.io](https://www.drawio.com/) or [LucidChart](https://www.lucidchart.com/pages/).
 
 **HINT:** You do not need to create any data for this prompt. This is a conceptual model only. 
-
+[text](<Library model.drawio>)
 #### Prompt 2
 We want to create employee shifts, splitting up the day into morning and evening. Add this to the ERD.
-
+--Adding Morning and Evening shifts to entities:
+[text](<../../../../../../Users/LENOVO/Downloads/Library model with shifts (1).drawio>)
 #### Prompt 3
 The store wants to keep customer addresses. Propose two architectures for the CUSTOMER_ADDRESS table, one that will retain changes, and another that will overwrite. Which is type 1, which is type 2? 
 
 **HINT:** search type 1 vs type 2 slowly changing dimensions. 
 
 ```
-Your answer...
+My answer:
+I think, first architecture for the CUSTOMER_ADDRESS (type 1) simply has col's of address including AddressLine1, City,	State,	ZipCode,	Country, and	EffectiveDate, which the current address simply overwrite by the new address without preserving the previous address history.  
+In second architecture for the CUSTOMER_ADDRESS (type 2)  we add a col named "AddressID" which can update address change, retaining the old address and its EffectiveDate. Each address change is recorded as a new row, preserving the historical data.
 ```
 
 ***
@@ -80,6 +83,12 @@ SELECT
 product_name || ', ' || product_size|| ' (' || product_qty_type || ')'
 FROM product
 ```
+A single string for each product, formatted as:
+product_name, product_size (product_qty_type)
+SELECT 
+product_name || ', ' || product_size|| ' (' || product_qty_type || ')'
+FROM product;
+
 
 But wait! The product table has some bad data (a few NULL values). 
 Find the NULLs and then using COALESCE, replace the NULL with a blank for the first problem, and 'unit' for the second problem. 
@@ -87,6 +96,10 @@ Find the NULLs and then using COALESCE, replace the NULL with a blank for the fi
 **HINT**: keep the syntax the same, but edited the correct components with the string. The `||` values concatenate the columns into strings. Edit the appropriate columns -- you're making two edits -- and the NULL rows will be fixed. All the other rows will remain the same.
 
 <div align="center">-</div>
+SELECT 
+product_name || ', ' || COALESCE(product_size, '') || ' (' || COALESCE(product_qty_type, 'unit') || ')'
+FROM product;
+
 
 #### Windowed Functions
 1. Write a query that selects from the customer_purchases table and numbers each customer’s visits to the farmer’s market (labeling each market date with a different number). Each customer’s first visit is labeled 1, second visit is labeled 2, etc. 
@@ -94,6 +107,20 @@ Find the NULLs and then using COALESCE, replace the NULL with a blank for the fi
 You can either display all rows in the customer_purchases table, with the counter changing on each new market date for each customer, or select only the unique market dates per customer (without purchase details) and number those visits. 
 
 **HINT**: One of these approaches uses ROW_NUMBER() and one uses DENSE_RANK().
+Approach 1:
+SELECT 
+    customer_id, 
+    market_date,
+    ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY market_date) AS visit_number
+FROM 
+    customer_purchases;
+Approach 2:
+SELECT 
+    customer_id, 
+    market_date,
+    DENSE_RANK() OVER (PARTITION BY customer_id ORDER BY market_date) AS visit_number
+FROM 
+    (SELECT DISTINCT customer_id, market_date FROM customer_purchases) AS unique_visits;
 
 2. Reverse the numbering of the query from a part so each customer’s most recent visit is labeled 1, then write another query that uses this one as a subquery (or temp table) and filters the results to only the customer’s most recent visit.
 
